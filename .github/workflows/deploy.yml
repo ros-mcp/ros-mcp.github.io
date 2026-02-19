@@ -1,0 +1,46 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+
+permissions:
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SOURCE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+
+      - name: Checkout source
+        run: git clone git@github.com:ros-mcp/ros-mcp.git source
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Build webmcp
+        run: |
+          cd source/examples/webmcp
+          npm ci
+          node build.mjs
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: source/examples/webmcp/dist
+
+      - id: deploy
+        uses: actions/deploy-pages@v4

@@ -34,13 +34,13 @@ jobs:
 
       - name: Build webmcp
         run: |
-          cd source/examples/webmcp
+          cd source/dashboard
           npm ci
           node build.mjs
 
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: source/examples/webmcp/dist
+          path: source/dashboard/dist
 
       - id: deploy
         uses: actions/deploy-pages@v4
